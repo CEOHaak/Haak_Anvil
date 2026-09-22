@@ -6,13 +6,14 @@ is preferred over v2 when both are present.
 
 from __future__ import annotations
 
+import contextlib
 import re
 from pathlib import Path
 
-from defusedxml import ElementTree as ET
+from defusedxml import ElementTree as ET  # noqa: N817
 
 from haak_anvil.core.models import Asset, Finding, Port, ReportBundle, Service
-from haak_anvil.core.severity import CVSS, Severity, severity_from_cvss, severity_from_nessus
+from haak_anvil.core.severity import CVSS, severity_from_cvss, severity_from_nessus
 from haak_anvil.parsers.base import ParserBase
 
 _CVE_RE = re.compile(r"CVE-\d{4}-\d{4,7}", re.IGNORECASE)
@@ -105,14 +106,12 @@ class NessusParser(ParserBase):
                 except ValueError:
                     pass
             elif v2_score:
-                try:
+                with contextlib.suppress(ValueError):
                     cvss_obj = CVSS(
                         score=float(v2_score),
                         vector=self._text(item, "cvss_vector") or None,
                         version="2.0",
                     )
-                except ValueError:
-                    pass
 
             description = self._text(item, "description") or ""
             solution = self._text(item, "solution") or None

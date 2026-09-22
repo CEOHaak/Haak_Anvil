@@ -6,17 +6,36 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Planned for v0.2
-- Burp Suite XML parser
-- Nuclei JSON parser
+### Planned for v0.3
 - OWASP ZAP JSON parser
-- CVE enrichment via NVD 2.0 API + EPSS scoring
-- HTML template variants (executive / technical / pretty-print)
 - PDF renderer via WeasyPrint
-- DOCX renderer via python-docx
 - AI executive summary (Claude API)
-- Engagement YAML template generator
-- Cache layer for NVD lookups
+- HTML template variants (executive / technical / pretty-print)
+- Exploit-availability enrichment (ExploitDB / GitHub PoCs)
+
+## [0.2.0] — 2026-09-22
+
+### Added
+- **Burp Suite XML parser** — `haak-anvil burp report.xml`. Decodes base64 blobs,
+  strips HTML to plain text, extracts CVE/CWE and CVSS vectors from free text.
+- **Nuclei JSONL parser** — `haak-anvil nuclei out.jsonl`. Handles `-jsonl`
+  (line-delimited) and legacy `-json` (array); reads `classification` CVSS/CVE/CWE.
+- **CVE enrichment via NVD 2.0** (`--enrich`) — fills missing CVSS on findings and
+  backfills CWE; honors `NVD_API_KEY` for higher rate limits.
+- **EPSS scoring** (FIRST.org) — annotates findings with exploitation probability
+  and percentile; `ReportBundle.findings_by_epss()` sorts by likelihood.
+- **Local TTL cache** for NVD + EPSS lookups under `~/.haak-anvil/cache/`.
+- **DOCX renderer** (`-f docx` / `-o report.docx`) — client-ready Word report via
+  python-docx (optional `docx` extra).
+- **`haak-anvil init`** — scaffolds an `engagement.yaml` template.
+- CLI: output extension now overrides `--format` (e.g. `-o report.docx`).
+- Tests + fixtures for Burp, Nuclei, enrichers (offline via `httpx.MockTransport`),
+  DOCX renderer, and CLI.
+
+### Changed
+- `Finding` gained `epss_score`, `epss_percentile`, `enriched` fields.
+- `ReportBundle` gained `unique_cves` and `findings_by_epss()`.
+- Repository moved to `github.com/CEOHaak/Haak_Anvil`.
 
 ## [0.1.0] — 2026-05-15
 
@@ -37,5 +56,6 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Authors
 - Alan Contreras (`@HaakConsulting` / contacto@haak.com.mx)
 
-[Unreleased]: https://github.com/alancontreras-mx/haak-anvil/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/alancontreras-mx/haak-anvil/releases/tag/v0.1.0
+[Unreleased]: https://github.com/CEOHaak/Haak_Anvil/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/CEOHaak/Haak_Anvil/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/CEOHaak/Haak_Anvil/releases/tag/v0.1.0

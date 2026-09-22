@@ -3,8 +3,8 @@ from haak_anvil.core.models import Asset, Finding, Port, ReportBundle, Service
 from haak_anvil.core.severity import CVSS, Severity, severity_from_cvss
 
 __all__ = [
-    "Asset",
     "CVSS",
+    "Asset",
     "Engagement",
     "Finding",
     "Port",

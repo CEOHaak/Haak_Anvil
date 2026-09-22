@@ -28,10 +28,10 @@ Existing tools either:
 Haak Anvil is:
 
 - **Modern Python 3.10+** (type-hinted, pydantic v2, async-ready).
-- **Multi-tool first**: Nmap and Nessus today, Burp / Nuclei / ZAP / sqlmap / Subfinder next.
-- **Multi-format output**: JSON (machine), Markdown (humans), HTML (clients), PDF + DOCX coming.
+- **Multi-tool first**: Nmap, Nessus, **Burp Suite**, and **Nuclei** today; ZAP / sqlmap / Subfinder next.
+- **Multi-format output**: JSON (machine), Markdown (humans), HTML (clients), **DOCX** (editable deliverable).
 - **Engagement-scoped**: every report is tied to a YAML-defined engagement (client, scope, dates, methodology, analyst).
-- **CVE/CWE-aware**: pulls IDs from tag fields and free text, ready for NVD/EPSS enrichment (v0.2).
+- **CVE/CWE-aware + enrichment**: pulls IDs from tags and free text, then `--enrich` fills CVSS from **NVD 2.0** and adds **EPSS** exploitation scores (locally cached).
 - **Apache 2.0**: use it commercially, no obligations.
 
 ---
@@ -39,9 +39,10 @@ Haak Anvil is:
 ## Quickstart
 
 ```bash
-git clone https://github.com/alancontreras-mx/haak-anvil.git
-cd haak-anvil
-python -m pip install -e .
+git clone https://github.com/CEOHaak/Haak_Anvil.git
+cd Haak_Anvil
+python -m pip install -e .            # core
+python -m pip install -e ".[docx]"   # + DOCX output
 ```
 
 ### Parse an Nmap scan and emit HTML
@@ -55,6 +56,30 @@ haak-anvil nmap out.xml --format html --output report.html
 
 ```bash
 haak-anvil nessus client.nessus --format md --output report.md
+```
+
+### Parse Burp Suite / Nuclei
+
+```bash
+haak-anvil burp burp-report.xml -f html -o burp.html
+haak-anvil nuclei scan.jsonl -f docx -o nuclei.docx
+```
+
+### Enrich with NVD CVSS + EPSS
+
+```bash
+export NVD_API_KEY=...        # optional, raises NVD rate limits
+haak-anvil nuclei scan.jsonl --enrich -f docx -o report.docx
+```
+
+`--enrich` fills any missing CVSS from NVD 2.0, backfills CWE, and annotates each
+finding with its EPSS score (probability of exploitation in 30 days). Lookups are
+cached under `~/.haak-anvil/cache/`.
+
+### Scaffold an engagement
+
+```bash
+haak-anvil init -o engagement.yaml
 ```
 
 ### Scoped engagement
@@ -97,9 +122,9 @@ haak-anvil merge reports/nmap.json reports/nessus.json -e engagement.yaml -f htm
 ```
 haak_anvil/
 ├── core/         # Engagement, Asset, Port, Finding, CVSS, Severity, ReportBundle
-├── parsers/      # ParserBase + nmap, nessus  (burp, nuclei, zap, sqlmap... v0.2)
-├── renderers/    # RendererBase + json, markdown, html  (pdf, docx... v0.2)
-├── enrichers/    # CVE/EPSS enrichment via NVD 2.0 API (stub v0.1, full v0.2)
+├── parsers/      # ParserBase + nmap, nessus, burp, nuclei  (zap, sqlmap... v0.3)
+├── renderers/    # RendererBase + json, markdown, html, docx  (pdf... v0.3)
+├── enrichers/    # NVD 2.0 CVSS + EPSS enrichment + local TTL cache
 ├── templates/    # Jinja2 HTML templates
 └── cli.py        # Typer CLI
 ```
@@ -110,38 +135,49 @@ renderer consumes a `ReportBundle` and emits a format. Adding a new tool is a
 
 ---
 
-## Supported tools (v0.1)
+## Supported tools (v0.2)
 
 | Tool        | Status | Notes                                              |
 |-------------|--------|----------------------------------------------------|
 | Nmap        | ✅     | XML output (`-oX`); 7.x tested                    |
 | Nessus      | ✅     | `.nessus` v2 export; CVSS v3 preferred over v2    |
-| Burp Suite  | 🚧 v0.2 | XML export                                       |
-| Nuclei      | 🚧 v0.2 | JSONL output                                     |
-| OWASP ZAP   | 🚧 v0.2 | JSON/XML reports                                 |
-| sqlmap      | 🚧 v0.2 | Output dir parsing                               |
-| Subfinder   | 🚧 v0.2 | JSON output                                      |
-| Gowitness   | 🚧 v0.2 | SQLite asset enrichment                          |
+| Burp Suite  | ✅     | XML export; base64 decode, CVE/CWE + CVSS vector  |
+| Nuclei      | ✅     | `-jsonl` (and legacy `-json` array)               |
+| OWASP ZAP   | 🚧 v0.3 | JSON/XML reports                                 |
+| sqlmap      | 🚧 v0.3 | Output dir parsing                               |
+| Subfinder   | 🚧 v0.3 | JSON output                                      |
 
 ---
 
-## Output formats (v0.1)
+## Output formats (v0.2)
 
 | Format      | Status | Use case                                  |
 |-------------|--------|-------------------------------------------|
 | JSON        | ✅     | Machine ingest (TheHive, SIEM, custom)    |
 | Markdown    | ✅     | GitHub wikis, internal docs               |
 | HTML        | ✅     | Client deliverable (Tailwind CDN, single file) |
-| PDF         | 🚧 v0.2 | Printable, WeasyPrint                    |
-| DOCX        | 🚧 v0.2 | Editable client deliverable              |
+| DOCX        | ✅     | Editable client deliverable (python-docx) |
+| PDF         | 🚧 v0.3 | Printable, WeasyPrint                    |
+
+---
+
+## Enrichment (v0.2)
+
+| Source      | What it adds                                             |
+|-------------|----------------------------------------------------------|
+| NVD 2.0     | CVSS v3.1 base score/vector for findings missing one; CWE backfill |
+| EPSS (FIRST)| Probability + percentile of exploitation in next 30 days |
+
+Enable with `--enrich`. Results are cached under `~/.haak-anvil/cache/` (NVD 30d,
+EPSS 3d TTL). Set `NVD_API_KEY` to raise NVD rate limits.
 
 ---
 
 ## Roadmap
 
-- **v0.2** (target Q3-2026): Burp + Nuclei + ZAP + sqlmap parsers, CVE/EPSS enrichment, PDF + DOCX renderers, HTML template variants.
-- **v0.3**: Optional FastAPI + HTMX web UI, plugin system via entry points, multi-language report templates (es-MX / en-US / pt-BR).
-- **v0.4**: AI-powered executive summary (Claude API), TheHive / Wazuh / MISP push integrations, chain-of-custody signing (Ed25519).
+- **v0.2** (shipped 2026-09-22): Burp + Nuclei parsers, NVD 2.0 + EPSS enrichment with cache, DOCX renderer, `init` scaffolder.
+- **v0.3**: OWASP ZAP + sqlmap parsers, PDF renderer (WeasyPrint), HTML template variants, AI executive summary (Claude API).
+- **v0.4**: Optional FastAPI + HTMX web UI, TheHive / Wazuh / MISP push integrations, chain-of-custody signing (Ed25519).
 
 See [CHANGELOG.md](CHANGELOG.md) for full release history.
 
@@ -150,7 +186,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full release history.
 ## Development
 
 ```bash
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev,docx]"   # docx extra unlocks the DOCX renderer tests
 ruff check src tests
 pytest --cov=haak_anvil --cov-report=term-missing
 ```

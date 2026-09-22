@@ -15,7 +15,7 @@ def test_get_renderer_unknown_raises():
     import pytest as _pt
 
     with _pt.raises(ValueError):
-        get_renderer("docx")
+        get_renderer("bogus-format")
 
 
 def test_json_renders_valid_json(nmap_xml, engagement):

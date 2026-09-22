@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!DOCTYPE issues [
+<!ELEMENT issues (issue*)>
+]>
+<issues burpVersion="2026.1" exportTime="Mon Jan 05 12:00:00 CST 2026">
+  <issue>
+    <serialNumber>4711000000000001</serialNumber>
+    <type>2097920</type>
+    <name>Cross-site scripting (reflected)</name>
+    <host ip="93.184.216.34">https://acme.example</host>
+    <path>/search</path>
+    <location>/search [q parameter]</location>
+    <severity>High</severity>
+    <confidence>Certain</confidence>
+    <issueBackground><![CDATA[<p>Reflected cross-site scripting arises when data is copied from a request into the response without sanitization. This maps to CWE-79.</p>]]></issueBackground>
+    <issueDetail><![CDATA[<p>The value of the <b>q</b> request parameter is copied into the HTML response without encoding.</p>]]></issueDetail>
+    <remediationBackground><![CDATA[<p>HTML-encode all user input on output. Validate input where possible.</p>]]></remediationBackground>
+    <references><![CDATA[<ul><li><a href="https://portswigger.net/web-security/cross-site-scripting">PortSwigger XSS</a></li></ul>]]></references>
+    <vulnerabilityClassifications><![CDATA[<ul><li>CWE-79: Improper Neutralization of Input During Web Page Generation</li></ul>]]></vulnerabilityClassifications>
+  </issue>
+  <issue>
+    <serialNumber>4711000000000002</serialNumber>
+    <type>4194560</type>
+    <name>TLS certificate (Heartbleed vulnerable)</name>
+    <host ip="93.184.216.34">https://acme.example:8443</host>
+    <path>/</path>
+    <location>/</location>
+    <severity>Medium</severity>
+    <confidence>Firm</confidence>
+    <issueBackground><![CDATA[<p>The server is affected by the OpenSSL Heartbleed vulnerability CVE-2014-0160. CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N applies.</p>]]></issueBackground>
+    <issueDetail><![CDATA[<p>A crafted TLS heartbeat request leaks memory contents.</p>]]></issueDetail>
+    <remediationBackground><![CDATA[<p>Upgrade OpenSSL to a patched version and rotate keys.</p>]]></remediationBackground>
+    <references><![CDATA[<ul><li><a href="https://nvd.nist.gov/vuln/detail/CVE-2014-0160">NVD CVE-2014-0160</a></li></ul>]]></references>
+    <vulnerabilityClassifications><![CDATA[<ul><li>CWE-125: Out-of-bounds Read</li></ul>]]></vulnerabilityClassifications>
+  </issue>
+  <issue>
+    <serialNumber>4711000000000003</serialNumber>
+    <type>5243392</type>
+    <name>Information disclosure (server banner)</name>
+    <host ip="93.184.216.34">https://acme.example</host>
+    <path>/</path>
+    <location>/ [Server header]</location>
+    <severity>Information</severity>
+    <confidence>Certain</confidence>
+    <issueBackground><![CDATA[<p>The Server response header reveals software version details.</p>]]></issueBackground>
+    <issueDetail><![CDATA[<p>Server: Apache/2.4.29</p>]]></issueDetail>
+    <remediationBackground><![CDATA[<p>Suppress version banners.</p>]]></remediationBackground>
+  </issue>
+</issues>

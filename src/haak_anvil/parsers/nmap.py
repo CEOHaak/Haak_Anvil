@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from defusedxml import ElementTree as ET
+from defusedxml import ElementTree as ET  # noqa: N817
 
 from haak_anvil.core.models import Asset, Finding, Port, ReportBundle, Service
 from haak_anvil.core.severity import Severity

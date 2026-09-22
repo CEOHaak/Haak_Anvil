@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "haak-anvil"
-version = "0.1.0"
+version = "0.2.0"
 description = "Modern, multi-format pentest report generator. Mexican-built, professional-grade."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -57,9 +57,9 @@ all = ["weasyprint>=62.0", "python-docx>=1.1.0", "anthropic>=0.30.0"]
 
 [project.urls]
 Homepage = "https://haak.com.mx"
-Repository = "https://github.com/alancontreras-mx/haak-anvil"
-Issues = "https://github.com/alancontreras-mx/haak-anvil/issues"
-Documentation = "https://github.com/alancontreras-mx/haak-anvil#readme"
+Repository = "https://github.com/CEOHaak/Haak_Anvil"
+Issues = "https://github.com/CEOHaak/Haak_Anvil/issues"
+Documentation = "https://github.com/CEOHaak/Haak_Anvil#readme"
 
 [project.scripts]
 haak-anvil = "haak_anvil.cli:app"

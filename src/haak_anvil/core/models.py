@@ -69,6 +69,18 @@ class Finding(BaseModel):
     plugin_family: str | None = None
     tool: str = Field(description="nmap | nessus | burp | nuclei | zap | manual | ...")
     detected_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    # ----- enrichment (populated by enrichers; empty until `--enrich`) -----
+    epss_score: float | None = Field(
+        default=None, ge=0.0, le=1.0,
+        description="EPSS probability (0-1) of exploitation in the next 30 days",
+    )
+    epss_percentile: float | None = Field(
+        default=None, ge=0.0, le=1.0,
+        description="EPSS percentile rank vs all scored CVEs",
+    )
+    enriched: bool = Field(
+        default=False, description="True once an enricher has processed this finding"
+    )
 
 
 class ReportBundle(BaseModel):
@@ -79,7 +91,7 @@ class ReportBundle(BaseModel):
     findings: list[Finding] = Field(default_factory=list)
     generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     generator: str = "haak-anvil"
-    generator_version: str = "0.1.0"
+    generator_version: str = "0.2.0"
 
     # ----- aggregation helpers -----
 
@@ -98,8 +110,24 @@ class ReportBundle(BaseModel):
     def high_count(self) -> int:
         return self.severity_breakdown[Severity.HIGH.value]
 
+    @property
+    def unique_cves(self) -> list[str]:
+        """All distinct CVE IDs across findings, sorted (newest-looking last is fine)."""
+        seen: set[str] = set()
+        for f in self.findings:
+            seen.update(c.upper() for c in f.cve)
+        return sorted(seen)
+
     def findings_by_severity(self, severity: Severity) -> list[Finding]:
         return [f for f in self.findings if f.severity == severity]
+
+    def findings_by_epss(self) -> list[Finding]:
+        """Findings sorted by EPSS score descending; unscored (None) sink to the bottom."""
+        return sorted(
+            self.findings,
+            key=lambda f: (f.epss_score if f.epss_score is not None else -1.0),
+            reverse=True,
+        )
 
     def findings_sorted(self) -> list[Finding]:
         """Critical first, info last, stable by id within tier."""
@@ -108,7 +136,7 @@ class ReportBundle(BaseModel):
             key=lambda f: (-f.severity.numeric, f.id),
         )
 
-    def merge(self, other: "ReportBundle") -> "ReportBundle":
+    def merge(self, other: ReportBundle) -> ReportBundle:
         """Combine two bundles (e.g., results from multiple tools on same engagement)."""
         if self.engagement.id != other.engagement.id:
             raise ValueError(

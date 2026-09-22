@@ -40,7 +40,7 @@ class Engagement(BaseModel):
     language: Literal["es-MX", "en-US", "pt-BR"] = "es-MX"
 
     @classmethod
-    def from_yaml(cls, path: Path | str) -> "Engagement":
+    def from_yaml(cls, path: Path | str) -> Engagement:
         path = Path(path)
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
 

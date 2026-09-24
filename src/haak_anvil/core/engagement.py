@@ -29,7 +29,8 @@ class Engagement(BaseModel):
         analyst: Alan Contreras
     """
 
-    id: str = Field(min_length=1, max_length=64)
+    # Used as the output filename stem; pattern blocks path traversal (../, /).
+    id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
     client_name: str = Field(min_length=1, alias="client_name")
     client_contact: EmailStr | None = None
     scope: str

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Literal
+from urllib.parse import urlsplit
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from haak_anvil.core.engagement import Engagement
 from haak_anvil.core.severity import CVSS, Severity
@@ -69,6 +70,15 @@ class Finding(BaseModel):
     plugin_family: str | None = None
     tool: str = Field(description="nmap | nessus | burp | nuclei | zap | manual | ...")
     detected_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    @field_validator("references", mode="after")
+    @classmethod
+    def _strip_dangerous_reference_urls(cls, refs: list[str]) -> list[str]:
+        # References come from untrusted scanner output and render as clickable
+        # links in HTML reports; a javascript:/data:/vbscript: URL would be
+        # stored XSS against the analyst/client who opens the report.
+        dangerous = {"javascript", "data", "vbscript", "file"}
+        return [r for r in refs if urlsplit(r.strip()).scheme.lower() not in dangerous]
     # ----- enrichment (populated by enrichers; empty until `--enrich`) -----
     epss_score: float | None = Field(
         default=None, ge=0.0, le=1.0,
